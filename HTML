@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Weekly Schedule in Toronto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 50px repeat(7, 1fr);
+            grid-template-rows: auto;
+        }
+        .time-label {
+            grid-column: 1;
+        }
+        .day-column {
+            position: relative;
+            border-left: 1px solid #e5e7eb;
+        }
+        .hour-row {
+            height: 60px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .event-card {
+            position: absolute;
+            width: calc(100% - 8px);
+            left: 4px;
+            border-radius: 8px;
+            padding: 4px 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        /* Tooltip for hover interaction */
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+        .event-card .tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 105%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .event-card:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
+            <p class="text-lg text-gray-600 mt-2">Tiago Ribeiro dos Anjos</p>
+        </header>
+
+        <div class="bg-white p-4 rounded-lg shadow-md mb-8">
+            <h2 class="text-lg font-semibold mb-3">Legend</h2>
+            <div class="flex flex-wrap">
+                <div class="legend-item"><div class="legend-color bg-green-200 border border-green-300"></div><span>Classes</span></div>
+                <div class="legend-item"><div class="legend-color bg-blue-200 border border-blue-300"></div><span>Study Blocks</span></div>
+                <div class="legend-item"><div class="legend-color bg-orange-200 border border-orange-300"></div><span>Personal / Other</span></div>
+                <div class="legend-item"><div class="legend-color bg-red-200 border border-red-300"></div><span>Commute</span></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="calendar-grid">
+                <!-- Header Row -->
+                <div class="time-label"></div>
+                <div id="header-row" class="col-start-2 col-end-9 grid grid-cols-7">
+                    <!-- Day headers will be injected here -->
+                </div>
+
+                <!-- Time and Day Columns container -->
+                <div class="time-labels-container col-start-1 col-end-2"></div>
+                <div id="calendar-body" class="col-start-2 col-end-9 grid grid-cols-7 relative">
+                     <!-- Events will be injected here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scheduleData = [
+            // MONDAY
+            { day: 'Monday', start: '07:40', end: '08:30', title: 'Commute: Home -> Quest', location: 'TTC', type: 'commute' },
+            { day: 'Monday', start: '08:40', end: '14:50', title: 'Quest English School', location: 'Toronto', type: 'class' },
+            { day: 'Monday', start: '14:50', end: '15:25', title: 'Commute: Quest -> OISE', location: 'Walk', type: 'commute' },
+            { day: 'Monday', start: '15:25', end: '18:45', title: 'Study Block', location: 'OISE Library', description: 'English & Politics', type: 'study' },
+            { day: 'Monday', start: '18:45', end: '19:35', title: 'Commute: OISE -> Home', location: 'TTC', type: 'commute' },
+
+            // TUESDAY
+            { day: 'Tuesday', start: '07:40', end: '08:30', title: 'Commute: Home -> Quest', location: 'TTC', type: 'commute' },
+            { day: 'Tuesday', start: '08:40', end: '14:50', title: 'Quest English School', location: 'Toronto', type: 'class' },
+            { day: 'Tuesday', start: '14:50', end: '15:45', title: 'Commute: Quest -> Home', location: 'TTC', type: 'commute' },
+            { day: 'Tuesday', start: '17:00', end: '20:00', title: 'Online Class', location: 'Home', description: 'Comparative Politics', type: 'class' },
+            { day: 'Tuesday', start: '20:15', end: '21:30', title: 'Study Block (Thesis)', location: 'Home', type: 'study' },
+            
+            // WEDNESDAY
+            { day: 'Wednesday', start: '07:40', end: '08:30', title: 'Commute: Home -> Quest', location: 'TTC', type: 'commute' },
+            { day: 'Wednesday', start: '08:40', end: '14:50', title: 'Quest English School', location: 'Toronto', type: 'class' },
+            { day: 'Wednesday', start: '14:50', end: '15:25', title: 'Commute: Quest -> OISE', location: 'Walk', type: 'commute' },
+            { day: 'Wednesday', start: '15:25', end: '17:00', title: 'Study Block', location: 'OISE Library', description: 'Statistics', type: 'study' },
+            { day: 'Wednesday', start: '17:00', end: '18:00', title: 'Online Therapy', location: 'OISE Library', type: 'personal' },
+            { day: 'Wednesday', start: '18:00', end: '18:45', title: 'Study Block', location: 'OISE Library', description: 'Statistics', type: 'study' },
+            { day: 'Wednesday', start: '18:45', end: '19:35', title: 'Commute: OISE -> Home', location: 'TTC', type: 'commute' },
+
+            // THURSDAY
+            { day: 'Thursday', start: '07:40', end: '08:30', title: 'Commute: Home -> Quest', location: 'TTC', type: 'commute' },
+            { day: 'Thursday', start: '08:40', end: '14:50', title: 'Quest English School', location: 'Toronto', type: 'class' },
+            { day: 'Thursday', start: '14:50', end: '15:25', title: 'Commute: Quest -> OISE', location: 'Walk', type: 'commute' },
+            { day: 'Thursday', start: '15:25', end: '16:50', title: 'Pre-Class Study', location: 'OISE Library', description: 'Statistics', type: 'study' },
+            { day: 'Thursday', start: '17:00', end: '20:00', title: 'In-Person Class', location: 'OISE', description: 'Intro to Statistics', type: 'class' },
+            { day: 'Thursday', start: '20:00', end: '20:50', title: 'Commute: OISE -> Home', location: 'TTC', type: 'commute' },
+            { day: 'Thursday', start: '21:00', end: '22:00', title: 'Review / Thesis Study', location: 'Home', type: 'study' },
+            
+            // FRIDAY
+            { day: 'Friday', start: '07:40', end: '08:30', title: 'Commute: Home -> Quest', location: 'TTC', type: 'commute' },
+            { day: 'Friday', start: '08:40', end: '14:50', title: 'Quest English School', location: 'Toronto', type: 'class' },
+            { day: 'Friday', start: '14:50', end: '15:25', title: 'Commute: Quest -> OISE', location: 'Walk', type: 'commute' },
+            { day: 'Friday', start: '15:25', end: '16:45', title: 'Study Block (Thesis)', location: 'OISE Library', type: 'study' },
+            { day: 'Friday', start: '16:45', end: '17:35', title: 'Commute: OISE -> Home', location: 'TTC', type: 'commute' },
+            { day: 'Friday', start: '17:45', end: '18:45', title: 'Weekly Planning', location: 'Home', type: 'personal' },
+
+            // SATURDAY
+            { day: 'Saturday', start: '09:30', end: '10:15', title: 'Commute: Home -> OISE', location: 'TTC', type: 'commute' },
+            { day: 'Saturday', start: '10:15', end: '13:00', title: 'Focused Study (Thesis)', location: 'OISE Library', type: 'study' },
+            { day: 'Saturday', start: '13:00', end: '14:00', title: 'Lunch Break', location: 'Near UofT', type: 'personal' },
+            { day: 'Saturday', start: '14:00', end: '16:45', title: 'Focused Study (Courses)', location: 'OISE Library', type: 'study' },
+            { day: 'Saturday', start: '16:45', end: '17:35', title: 'Commute: OISE -> Home', location: 'TTC', type: 'commute' },
+        ];
+
+        const colorMap = {
+            class: 'bg-green-200 border-green-300 text-green-800',
+            study: 'bg-blue-200 border-blue-300 text-blue-800',
+            personal: 'bg-orange-200 border-orange-300 text-orange-800',
+            commute: 'bg-red-200 border-red-300 text-red-800'
+        };
+
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function renderCalendar() {
+            const headerRow = document.getElementById('header-row');
+            const calendarBody = document.getElementById('calendar-body');
+            const timeLabelsContainer = document.querySelector('.time-labels-container');
+            
+            headerRow.innerHTML = '';
+            calendarBody.innerHTML = '';
+            timeLabelsContainer.innerHTML = '';
+
+            // Create day headers
+            days.forEach(day => {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'text-center font-semibold py-3 border-b-2 border-gray-200';
+                if (day === 'Saturday' || day === 'Sunday') {
+                    headerCell.classList.add('bg-gray-50');
+                }
+                headerCell.textContent = day;
+                headerRow.appendChild(headerCell);
+            });
+
+            // Create day columns
+            days.forEach((day, index) => {
+                const dayColumn = document.createElement('div');
+                dayColumn.className = `day-column col-start-${index + 1} col-end-${index + 2}`;
+                if (day === 'Saturday' || day === 'Sunday') {
+                    dayColumn.classList.add('bg-gray-50');
+                }
+                calendarBody.appendChild(dayColumn);
+            });
+
+            // Create time labels and hour rows starting from 7 AM
+            for (let hour = 7; hour <= 22; hour++) {
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'time-label text-right pr-2 text-sm text-gray-500';
+                timeLabel.style.height = '60px';
+                let displayHour = hour % 12 === 0 ? 12 : hour % 12;
+                if (hour === 12) displayHour = 12;
+                timeLabel.textContent = `${displayHour} ${hour < 12 ? 'AM' : 'PM'}`;
+                if (hour === 24) timeLabel.textContent = '12 AM';
+
+                timeLabelsContainer.appendChild(timeLabel);
+
+                days.forEach((day, index) => {
+                    const dayColumn = calendarBody.children[index];
+                    const hourRow = document.createElement('div');
+                    hourRow.className = 'hour-row';
+                    dayColumn.appendChild(hourRow);
+                });
+            }
+
+            // Render events
+            scheduleData.forEach(event => {
+                const dayIndex = days.indexOf(event.day);
+                if (dayIndex === -1) return;
+
+                const dayColumn = calendarBody.children[dayIndex];
+                
+                const start = event.start.split(':').map(Number);
+                const end = event.end.split(':').map(Number);
+
+                const startTotalMinutes = start[0] * 60 + start[1];
+                const endTotalMinutes = end[0] * 60 + end[1];
+                const durationMinutes = endTotalMinutes - startTotalMinutes;
+                
+                const topPosition = startTotalMinutes - (7 * 60);
+
+                const eventCard = document.createElement('div');
+                eventCard.className = `event-card ${colorMap[event.type]}`;
+                eventCard.style.top = `${topPosition}px`;
+                eventCard.style.height = `${durationMinutes}px`;
+
+                let content = `<span class="tooltip">${event.start} - ${event.end}</span><strong class="font-semibold">${event.title}</strong>`;
+                if (durationMinutes > 40) {
+                    content += `<p>${event.location}</p>`;
+                }
+                 if (durationMinutes > 75 && event.description) {
+                    content += `<p class="italic mt-1">${event.description}</p>`;
+                }
+
+                eventCard.innerHTML = content;
+                dayColumn.appendChild(eventCard);
+
+                // Adjust font size based on height or type
+                if (event.type === 'commute') {
+                    eventCard.classList.add('text-xs');
+                    const details = eventCard.querySelectorAll('p');
+                    details.forEach(p => p.style.display = 'none'); // Hide location for commute blocks
+                } else {
+                    const height = durationMinutes; // Use duration instead of offsetHeight for consistency
+                    if (height < 45) {
+                        eventCard.classList.add('text-xs');
+                        const details = eventCard.querySelectorAll('p');
+                        details.forEach(p => p.style.display = 'none');
+                    } else if (height < 90) {
+                         eventCard.classList.add('text-sm');
+                    }
+                }
+            });
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
+
